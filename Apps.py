@@ -3,6 +3,12 @@ from lxml import html
 
 
 class Apps:
+
+	"""
+	This class will automatically create api_key and api_hash if they are not created yet and/or 
+	will return them if they are already created!
+	"""
+
 	def __init__(self, phone_number, callback=None, app_name=None, short_name=None):
 		self.phone_number = phone_number
 		self.app_name = app_name
@@ -14,7 +20,7 @@ class Apps:
 		self.base_url = "https://my.telegram.org"
 		self.session = requests.Session()
 		self.stored_data = {}
-		
+
 		if not self.app_name:
 			self.app_name = ''.join(random.choice('abcdefghilmnopqrstuvz') for _ in range(10))
 		if not self.short_name:
@@ -22,7 +28,7 @@ class Apps:
 		if self.callback:
 			self.pwd = self.callback
 		else:
-			self.pwd = input('Insert pwd: ')
+			self.pwd = input('Insert code: ')
 
 
 	def send_password(self):
@@ -34,22 +40,24 @@ class Apps:
 			self.stored_data.update(res.json()) # Add hash to stored data
 			return True
 		else:
-			return False
+			print("Failed to send_password!")
+			print(self.stored_data)
+			sys.exit(0)
 
 	def login(self):
 		entry_point = "/auth/login"
 		url = self.base_url+entry_point
+		self.stored_data['pwd'] = self.pwd()
 		data = {
 			"phone": self.phone_number,
 			"random_hash": self.stored_data['random_hash'],
-			"password": self.pwd
+			"password": self.stored_data['pwd']
 		}
 		res = self.session.post(url, data=data)
 		if res.ok:
-			self.stored_data['pwd'] = pwd
 			return True
 		else:
-			print("Login Failed")
+			print("Login Failed!")
 			print(self.stored_data)
 			sys.exit(0)
 
@@ -77,10 +85,6 @@ class Apps:
 		entry_point = "/apps"
 		url = self.base_url+entry_point
 		res = self.session.get(url)
-		if not res.text:
-			print('Errore get_apps non ha ritornato niente')
-			print(self.stored_data)
-			sys.exit(0)
 		tree = html.fromstring(res.content)
 		_hash = tree.xpath('//*[@id="app_create_form"]/input/@value')
 		if not _hash:
@@ -100,6 +104,7 @@ class Apps:
 		print("API_ID: %s, API_HASH: %s" % (api_id, api_hash))
 		self.stored_data['api_id'] = api_id
 		self.stored_data['api_hash'] = api_hash
+		return True
 
 
 	def auto(self):
