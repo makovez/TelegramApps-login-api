@@ -28,7 +28,7 @@ class Apps:
 		if self.callback:
 			self.pwd = self.callback
 		else:
-			self.pwd = input('Insert pwd: ')
+			self.pwd = input('Insert code: ')
 
 
 	def send_password(self):
